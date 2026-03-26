@@ -1,0 +1,11 @@
+{
+  "workspace": "crystal-peak",
+  "project": "Email Tools",
+  "project_id": "a749d65e-8131-4869-850f-8491b76dc4ff",
+  "team": "PEAK",
+  "team_id": "a66b0ed4-10b3-4655-bd40-1cbd03e7aac9",
+  "label": "repo:email-tools",
+  "github_org": "crystal-peak",
+  "commit_format": "PEAK-{id}: {message}",
+  "branch_format": "{user}/PEAK-{id}-{slug}"
+}
