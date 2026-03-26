@@ -23,7 +23,7 @@ Before executing any Gmail operation, verify the toolchain is available and auth
 Run `which gws` to confirm the CLI is on the PATH. If it is not installed, instruct the user to install it:
 
 ```bash
-npm install -g @anthropic/gws
+npm install -g @googleworkspace/cli
 ```
 
 The upstream repository is https://github.com/googleworkspace/cli — check there if the package name has changed.
@@ -33,7 +33,7 @@ The upstream repository is https://github.com/googleworkspace/cli — check ther
 Attempt a profile fetch to verify credentials:
 
 ```bash
-gws gmail users.getProfile --params '{"userId":"me"}'
+gws gmail users getProfile --params '{"userId":"me"}'
 ```
 
 If this returns an authentication error, guide the user through login:
@@ -95,14 +95,14 @@ Retrieve the user profile to obtain the email address (if not already captured d
 List all unread inbox messages:
 
 ```bash
-gws gmail users.messages list --params '{"q":"is:unread in:inbox","maxResults":500,"userId":"me"}' --page-all
+gws gmail users messages list --params '{"q":"is:unread in:inbox","maxResults":500,"userId":"me"}' --page-all
 ```
 
 Report the total count to the user before proceeding. If the count is zero, inform the user their inbox is clean and stop.
 
 ### Phase 2 — Categorize
 
-Fetch message metadata in batches of 50 using `users.messages get` with `format: "metadata"` and `metadataHeaders` including From, To, Subject, List-Unsubscribe, X-Mailer, and similar headers.
+Fetch message metadata in batches of 50 using `users messages get` with `format: "metadata"` and `metadataHeaders` including From, To, Subject, List-Unsubscribe, X-Mailer, and similar headers.
 
 Apply the categorization heuristics defined in `references/triage-heuristics.md`. For each message, assign it to one of three buckets:
 
@@ -123,7 +123,7 @@ Wait for explicit user confirmation before taking any action. Do not archive aut
 Once confirmed, batch-archive using `batchModify` in chunks of 1000 message IDs:
 
 ```bash
-gws gmail users.messages.batchModify --params '{"ids":["MSG_ID_1","MSG_ID_2",...],"userId":"me","removeLabelIds":["INBOX"]}'
+gws gmail users messages batchModify --params '{"ids":["MSG_ID_1","MSG_ID_2",...],"userId":"me","removeLabelIds":["INBOX"]}'
 ```
 
 Only remove the `INBOX` label. Do NOT remove the `UNREAD` label — the user may want to read archived messages later.
@@ -173,7 +173,7 @@ For messages the user wants to save without sending, use the `--draft` flag to s
 ### Search for messages
 
 ```bash
-gws gmail users.messages list --params '{"q":"QUERY","userId":"me"}'
+gws gmail users messages list --params '{"q":"QUERY","userId":"me"}'
 ```
 
 The `q` parameter accepts full Gmail search syntax. Common operators include:
@@ -205,7 +205,7 @@ This retrieves and displays the full message content including headers, body, an
 ### List all labels
 
 ```bash
-gws gmail users.labels list --params '{"userId":"me"}'
+gws gmail users labels list --params '{"userId":"me"}'
 ```
 
 Cache the label list during a session to avoid repeated API calls. Labels have both a human-readable `name` and an internal `id` — always use the `id` when modifying messages.
@@ -213,13 +213,13 @@ Cache the label list during a session to avoid repeated API calls. Labels have b
 ### Archive a single message
 
 ```bash
-gws gmail users.messages modify --params '{"id":"MSG_ID","userId":"me","removeLabelIds":["INBOX"]}'
+gws gmail users messages modify --params '{"id":"MSG_ID","userId":"me","removeLabelIds":["INBOX"]}'
 ```
 
 ### Bulk archive
 
 ```bash
-gws gmail users.messages.batchModify --params '{"ids":["MSG_ID_1","MSG_ID_2",...],"userId":"me","removeLabelIds":["INBOX"]}'
+gws gmail users messages batchModify --params '{"ids":["MSG_ID_1","MSG_ID_2",...],"userId":"me","removeLabelIds":["INBOX"]}'
 ```
 
 Chunk into batches of 1000 IDs if the list exceeds that limit.
@@ -227,7 +227,7 @@ Chunk into batches of 1000 IDs if the list exceeds that limit.
 ### Apply a label
 
 ```bash
-gws gmail users.messages modify --params '{"id":"MSG_ID","userId":"me","addLabelIds":["LABEL_ID"]}'
+gws gmail users messages modify --params '{"id":"MSG_ID","userId":"me","addLabelIds":["LABEL_ID"]}'
 ```
 
 For bulk labeling, use `batchModify` with `addLabelIds`.
@@ -235,13 +235,13 @@ For bulk labeling, use `batchModify` with `addLabelIds`.
 ### Remove a label
 
 ```bash
-gws gmail users.messages modify --params '{"id":"MSG_ID","userId":"me","removeLabelIds":["LABEL_ID"]}'
+gws gmail users messages modify --params '{"id":"MSG_ID","userId":"me","removeLabelIds":["LABEL_ID"]}'
 ```
 
 ### Create a new label
 
 ```bash
-gws gmail users.labels create --params '{"userId":"me","name":"New Label"}'
+gws gmail users labels create --params '{"userId":"me","name":"New Label"}'
 ```
 
 ---

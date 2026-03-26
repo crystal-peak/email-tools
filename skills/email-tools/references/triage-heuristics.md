@@ -25,10 +25,10 @@ Fetch these metadata headers for every message:
 Fetch command:
 
 ```
-gws gmail users.messages get --params '{"id":"MSG_ID","userId":"me","format":"metadata","metadataHeaders":["From","To","Cc","Subject","List-Unsubscribe","X-GitHub-Sender","X-Jira-FingerPrint","Reply-To","Content-Type","Precedence","X-Auto-Response-Suppress","X-Mailer","Sender"]}'
+gws gmail users messages get --params '{"id":"MSG_ID","userId":"me","format":"metadata","metadataHeaders":["From","To","Cc","Subject","List-Unsubscribe","X-GitHub-Sender","X-Jira-FingerPrint","Reply-To","Content-Type","Precedence","X-Auto-Response-Suppress","X-Mailer","Sender"]}'
 ```
 
-Obtain the user's own email address from `gws gmail users.getProfile` before evaluating any rules.
+Obtain the user's own email address from `gws gmail users getProfile` before evaluating any rules.
 
 ## Categorization Rules
 

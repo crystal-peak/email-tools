@@ -32,7 +32,7 @@ gws auth status
 ### Verify Gmail Access
 
 ```bash
-gws gmail users.getProfile --params '{"userId":"me"}'
+gws gmail users getProfile --params '{"userId":"me"}'
 ```
 
 Returns the authenticated user's email address and message/thread totals. Use this to confirm auth is working before running other commands.
@@ -185,9 +185,9 @@ The `userId` parameter defaults to `"me"` in most contexts. Always pass it expli
 ### users.messages list — Search/List Messages
 
 ```bash
-gws gmail users.messages list --params '{"userId":"me","q":"is:unread","maxResults":10}'
-gws gmail users.messages list --params '{"userId":"me","q":"from:alice@example.com","labelIds":["INBOX"]}' --page-all
-gws gmail users.messages list --params '{"userId":"me","q":"newer_than:1d"}' --page-all --page-limit 5
+gws gmail users messages list --params '{"userId":"me","q":"is:unread","maxResults":10}'
+gws gmail users messages list --params '{"userId":"me","q":"from:alice@example.com","labelIds":["INBOX"]}' --page-all
+gws gmail users messages list --params '{"userId":"me","q":"newer_than:1d"}' --page-all --page-limit 5
 ```
 
 | Parameter | Type | Description |
@@ -209,8 +209,8 @@ Returns `messages` array with `id` and `threadId` for each message. Use `users.m
 ### users.messages get — Get Single Message
 
 ```bash
-gws gmail users.messages get --params '{"userId":"me","id":"MESSAGE_ID","format":"full"}'
-gws gmail users.messages get --params '{"userId":"me","id":"MESSAGE_ID","format":"metadata","metadataHeaders":["From","Subject","Date"]}'
+gws gmail users messages get --params '{"userId":"me","id":"MESSAGE_ID","format":"full"}'
+gws gmail users messages get --params '{"userId":"me","id":"MESSAGE_ID","format":"metadata","metadataHeaders":["From","Subject","Date"]}'
 ```
 
 | Parameter | Type | Description |
@@ -229,7 +229,7 @@ Format options:
 ### users.messages modify — Modify Labels (Single Message)
 
 ```bash
-gws gmail users.messages modify --params '{"userId":"me","id":"MESSAGE_ID"}' \
+gws gmail users messages modify --params '{"userId":"me","id":"MESSAGE_ID"}' \
   --json '{"addLabelIds":["STARRED"],"removeLabelIds":["UNREAD"]}'
 ```
 
@@ -241,7 +241,7 @@ gws gmail users.messages modify --params '{"userId":"me","id":"MESSAGE_ID"}' \
 ### users.messages.batchModify — Bulk Modify Labels
 
 ```bash
-gws gmail users.messages.batchModify --params '{"userId":"me"}' \
+gws gmail users messages batchModify --params '{"userId":"me"}' \
   --json '{"ids":["MSG_1","MSG_2","MSG_3"],"addLabelIds":["Label_5"],"removeLabelIds":["INBOX"]}'
 ```
 
@@ -254,7 +254,7 @@ gws gmail users.messages.batchModify --params '{"userId":"me"}' \
 ### users.messages delete — Permanently Delete
 
 ```bash
-gws gmail users.messages delete --params '{"userId":"me","id":"MESSAGE_ID"}'
+gws gmail users messages delete --params '{"userId":"me","id":"MESSAGE_ID"}'
 ```
 
 **DANGEROUS: Permanently deletes the message. Cannot be undone. Prefer `trash` instead.**
@@ -262,7 +262,7 @@ gws gmail users.messages delete --params '{"userId":"me","id":"MESSAGE_ID"}'
 ### users.messages trash — Move to Trash
 
 ```bash
-gws gmail users.messages trash --params '{"userId":"me","id":"MESSAGE_ID"}'
+gws gmail users messages trash --params '{"userId":"me","id":"MESSAGE_ID"}'
 ```
 
 Moves the message to Trash. Can be recovered within 30 days.
@@ -270,7 +270,7 @@ Moves the message to Trash. Can be recovered within 30 days.
 ### users.labels list — List All Labels
 
 ```bash
-gws gmail users.labels list --params '{"userId":"me"}'
+gws gmail users labels list --params '{"userId":"me"}'
 ```
 
 Returns all system and user labels with their IDs. Use label IDs (not names) in `modify` and `batchModify` calls.
@@ -278,7 +278,7 @@ Returns all system and user labels with their IDs. Use label IDs (not names) in 
 ### users.getProfile — Get Authenticated User's Profile
 
 ```bash
-gws gmail users.getProfile --params '{"userId":"me"}'
+gws gmail users getProfile --params '{"userId":"me"}'
 ```
 
 Returns `emailAddress`, `messagesTotal`, `threadsTotal`, and `historyId`.
@@ -392,41 +392,41 @@ after:2025/01/01 before:2025/03/31 from:client@example.com
 ### Archive a Message
 
 ```bash
-gws gmail users.messages modify --params '{"userId":"me","id":"MSG_ID"}' \
+gws gmail users messages modify --params '{"userId":"me","id":"MSG_ID"}' \
   --json '{"removeLabelIds":["INBOX"]}'
 ```
 
 ### Mark as Read
 
 ```bash
-gws gmail users.messages modify --params '{"userId":"me","id":"MSG_ID"}' \
+gws gmail users messages modify --params '{"userId":"me","id":"MSG_ID"}' \
   --json '{"removeLabelIds":["UNREAD"]}'
 ```
 
 ### Mark as Unread
 
 ```bash
-gws gmail users.messages modify --params '{"userId":"me","id":"MSG_ID"}' \
+gws gmail users messages modify --params '{"userId":"me","id":"MSG_ID"}' \
   --json '{"addLabelIds":["UNREAD"]}'
 ```
 
 ### Star a Message
 
 ```bash
-gws gmail users.messages modify --params '{"userId":"me","id":"MSG_ID"}' \
+gws gmail users messages modify --params '{"userId":"me","id":"MSG_ID"}' \
   --json '{"addLabelIds":["STARRED"]}'
 ```
 
 ### Move to Trash
 
 ```bash
-gws gmail users.messages trash --params '{"userId":"me","id":"MSG_ID"}'
+gws gmail users messages trash --params '{"userId":"me","id":"MSG_ID"}'
 ```
 
 Or via label modification:
 
 ```bash
-gws gmail users.messages modify --params '{"userId":"me","id":"MSG_ID"}' \
+gws gmail users messages modify --params '{"userId":"me","id":"MSG_ID"}' \
   --json '{"addLabelIds":["TRASH"]}'
 ```
 
@@ -435,27 +435,27 @@ gws gmail users.messages modify --params '{"userId":"me","id":"MSG_ID"}' \
 Look up the label ID first:
 
 ```bash
-gws gmail users.labels list --params '{"userId":"me"}'
+gws gmail users labels list --params '{"userId":"me"}'
 ```
 
 Then apply it:
 
 ```bash
-gws gmail users.messages modify --params '{"userId":"me","id":"MSG_ID"}' \
+gws gmail users messages modify --params '{"userId":"me","id":"MSG_ID"}' \
   --json '{"addLabelIds":["Label_5"]}'
 ```
 
 ### Bulk Archive (Up to 1000 Messages)
 
 ```bash
-gws gmail users.messages.batchModify --params '{"userId":"me"}' \
+gws gmail users messages batchModify --params '{"userId":"me"}' \
   --json '{"ids":["MSG_1","MSG_2","MSG_3"],"removeLabelIds":["INBOX"]}'
 ```
 
 ### Bulk Mark as Read
 
 ```bash
-gws gmail users.messages.batchModify --params '{"userId":"me"}' \
+gws gmail users messages batchModify --params '{"userId":"me"}' \
   --json '{"ids":["MSG_1","MSG_2"],"removeLabelIds":["UNREAD"]}'
 ```
 
@@ -473,10 +473,10 @@ gws gmail users.messages.batchModify --params '{"userId":"me"}' \
 
 ```bash
 # Extract message IDs from a list
-gws gmail users.messages list --params '{"userId":"me","q":"is:unread"}' | jq -r '.messages[].id'
+gws gmail users messages list --params '{"userId":"me","q":"is:unread"}' | jq -r '.messages[].id'
 
 # Get subject lines from full messages
-gws gmail users.messages get --params '{"userId":"me","id":"MSG_ID","format":"metadata","metadataHeaders":["Subject"]}' \
+gws gmail users messages get --params '{"userId":"me","id":"MSG_ID","format":"metadata","metadataHeaders":["Subject"]}' \
   | jq -r '.payload.headers[] | select(.name=="Subject") | .value'
 ```
 
