@@ -144,12 +144,15 @@ gws gmail +forward --message-id MESSAGE_ID --to colleague@example.com --body "FY
 ### +read — Read Message Content
 
 ```bash
-gws gmail +read --message-id MESSAGE_ID
+gws gmail +read --id MESSAGE_ID
 ```
 
 | Flag | Description | Required |
 |------|-------------|----------|
-| `--message-id` | ID of message to read | Yes |
+| `--id` | ID of message to read | Yes |
+| `--headers` | Include From, To, Subject, Date headers | No |
+| `--format` | Output format: text (default), json | No |
+| `--html` | Return HTML body instead of plain text | No |
 
 Returns the full message content including headers, body, and attachment metadata.
 

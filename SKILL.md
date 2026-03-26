@@ -50,21 +50,20 @@ Extract the `emailAddress` field from the profile response and store it. This va
 
 ### Multi-account support
 
-The `gws` CLI supports multiple authenticated Google accounts. When the user has more than one account:
+The `gws` CLI stores one set of credentials at a time. Check the active account with `gws auth status` (look at the `user` field).
 
-1. **Detect available accounts** — Run `gws auth list` to see all authenticated accounts.
-2. **Ask which account to use** — If multiple accounts exist, present a numbered list and ask the user to pick one:
-   ```
-   Multiple Gmail accounts detected:
-    1. alice@acme.com
-    2. alice.jones@gmail.com
-    3. alice@freelance.dev
+To switch accounts, the user must re-authenticate:
 
-   Which account? (1-3)
-   ```
-3. **Set the active account** — Use `gws auth switch EMAIL` or pass `--account EMAIL` to subsequent commands to target the selected account. Alternatively, set `userId` to the full email address instead of `"me"` in API method params.
-4. **Remember for session** — Once the user picks an account, use it for all subsequent operations in the session without re-asking. If the user says "switch account" or "use my other email", show the list again.
-5. **Single account fast path** — If only one account is authenticated, skip the selection and use it automatically.
+```bash
+gws auth login -s gmail
+```
+
+This opens the browser where a different Google account can be selected. The new credentials overwrite the previous ones.
+
+When the user asks to "switch account" or "use my other email":
+1. Show the currently active account from `gws auth status`
+2. Offer to re-authenticate: "To switch, run `gws auth login -s gmail` in your terminal and pick the other account."
+3. After re-auth, verify by running `gws gmail users getProfile --params '{"userId":"me"}'`
 
 ---
 
@@ -193,7 +192,7 @@ Refer to `references/gws-gmail-commands.md` for the full query syntax cheat shee
 ### Read a specific message
 
 ```bash
-gws gmail +read --message-id MSG_ID
+gws gmail +read --id MSG_ID
 ```
 
 This retrieves and displays the full message content including headers, body, and attachment metadata. Only invoke this when the user specifically asks to read a message — do not fetch message bodies during triage or search unless instructed.

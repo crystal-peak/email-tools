@@ -15,9 +15,8 @@ This command provides full Gmail management via the gws CLI. Use the email-tools
 
 On first invocation in a session:
 1. Check gws is installed and authenticated (see email-tools skill prerequisites)
-2. Run `gws auth list` to detect available accounts
-3. If multiple accounts, present a numbered selection and ask the user to pick
-4. Store the selected account for the rest of the session
+2. Run `gws auth status` to confirm the active account
+3. Show the active account to the user before proceeding
 
 ## Routing
 
@@ -34,7 +33,6 @@ If no argument was provided, show this menu:
  5. **search** — Search your email
  6. **read** — Read a specific message
  7. **labels** — Manage your labels
- 8. **switch account** — Change active Gmail account
 
 Pick a number or describe what you need.
 
