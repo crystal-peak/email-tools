@@ -1,5 +1,5 @@
 {
-  "description": "Plugin hooks for email-tools — validates gws CLI command syntax and enforces bulk operations",
+  "description": "Plugin hooks for email-tools — validates gws CLI command syntax",
   "hooks": {
     "PreToolUse": [
       {
@@ -9,11 +9,6 @@
             "type": "command",
             "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/gws-command-guard.sh",
             "timeout": 5
-          },
-          {
-            "type": "prompt",
-            "prompt": "Check if this Bash command is a gws gmail command. If it is NOT a gws command, respond 'approve'. If it IS a gws command, check these rules:\n\n1. API methods must use space-separated subcommands: 'gws gmail users messages list' not 'gws gmail list'. If wrong, respond 'deny' with the corrected command.\n\n2. API methods must use --params for parameters as JSON. There are NO --user-id, --message-id, --max-results flags. If wrong, respond 'deny' with the fix.\n\n3. For batchModify, the request body (ids, addLabelIds, removeLabelIds) must go in --json, and only userId goes in --params. Example: gws gmail users messages batchModify --params '{\"userId\":\"me\"}' --json '{\"ids\":[...],\"addLabelIds\":[\"TRASH\"]}'. If wrong, respond 'deny'.\n\n4. If this is calling 'gws gmail users messages trash' and there are other parallel trash calls happening (check if this looks like one of many individual trash calls), respond 'deny' and say: 'Use batchModify instead of individual trash calls. One call: gws gmail users messages batchModify --params {\"userId\":\"me\"} --json {\"ids\":[all_ids],\"addLabelIds\":[\"TRASH\"]}'.\n\nRespond with just 'approve' if the command is correct, or 'deny' with explanation if not.",
-            "timeout": 10
           }
         ]
       }
