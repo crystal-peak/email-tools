@@ -7,22 +7,13 @@ Walk users through the complete gws CLI setup. This is a one-time process per ma
 Run these checks in order to determine what state the user is in:
 
 ```bash
-which gws 2>/dev/null
+which gws 2>/dev/null && gws auth status 2>&1
 ```
 
-- **Not found** → Go to Step 1 (Install)
-- **Found** → Check auth:
-
-```bash
-gws auth status 2>&1
-```
-
-- `"auth_method": "none"` or `"has_refresh_token": false` → Go to Step 2 (Google Cloud project) or Step 3 (Login) depending on whether `client_config_exists` is true
-- `"token_valid": true` → Fully set up. Verify with a profile fetch:
-
-```bash
-gws gmail users getProfile --params '{"userId":"me"}'
-```
+- **gws not found** → Start at Step 1
+- **`auth_method: none`** or **`client_config_exists: false`** → Start at Step 2
+- **`has_refresh_token: false`** or **`token_valid: false`** → Start at Step 4
+- **`token_valid: true`** → Fully set up. Verify with `gws gmail users getProfile --params '{"userId":"me"}'`
 
 ## Step 1: Install gws
 
@@ -36,11 +27,29 @@ Alternative methods:
 
 Verify: `which gws` should return a path.
 
-## Step 2: Google Cloud Project + OAuth Credentials
+## Step 2: Collect Gmail Accounts
 
-This is the most involved step. Guide the user through it carefully.
+Before starting the Google Cloud setup, ask the user which Gmail accounts they want to manage. This determines how many test users to add in the OAuth consent screen — much easier to do all at once.
 
-### 2a. Create a Google Cloud project
+Ask: "Which Gmail addresses do you want to manage? List all of them — personal, work, etc."
+
+Present as a numbered list for confirmation:
+```
+Got it. I'll make sure all of these are set up:
+ 1. alice@acme.com
+ 2. alice.jones@gmail.com
+ 3. alice@freelance.dev
+
+Let's get the Google Cloud project configured.
+```
+
+Store this list for Step 3c (test users) and Step 4 (per-account login).
+
+## Step 3: Google Cloud Project + OAuth Credentials
+
+This is the most involved step. Guide the user through it one sub-step at a time — confirm each is done before moving to the next.
+
+### 3a. Create a Google Cloud project
 
 Direct the user to: https://console.cloud.google.com/projectcreate
 
@@ -48,14 +57,14 @@ Direct the user to: https://console.cloud.google.com/projectcreate
 - Organization: leave as default or pick their org
 - Click "Create" and wait for it to provision
 
-### 2b. Enable the Gmail API
+### 3b. Enable the Gmail API
 
 Direct the user to: https://console.cloud.google.com/apis/library/gmail.googleapis.com
 
 - Make sure the correct project is selected in the top dropdown
 - Click "Enable"
 
-### 2c. Configure OAuth consent screen
+### 3c. Configure OAuth consent screen
 
 Direct the user to: https://console.cloud.google.com/auth/audience
 
@@ -64,9 +73,9 @@ Direct the user to: https://console.cloud.google.com/auth/audience
 - **User support email**: their email
 - **Developer contact email**: their email
 - Skip the scopes page — gws handles scope selection at login time
-- **Test users**: Add every Gmail address they want to use with this tool. This is critical — while the app is in "Testing" mode, only emails added here can authenticate. They can add more later.
+- **Test users**: Add ALL the Gmail addresses collected in Step 2. This is critical — while the app is in "Testing" mode, only emails listed here can authenticate. Present the list from Step 2 and remind the user to add every one.
 
-### 2d. Create OAuth client ID
+### 3d. Create OAuth client ID
 
 Direct the user to: https://console.cloud.google.com/apis/credentials
 
@@ -76,34 +85,33 @@ Direct the user to: https://console.cloud.google.com/apis/credentials
 - Click "Create"
 - **Download the JSON file** — click the download button
 
-### 2e. Place the client secret file
+### 3e. Place the client secret file
 
-The downloaded file will be named something like "Client Secret JSON from Google Cloud.json" or "client_secret_NUMBERS.json". It needs to go to a specific location:
+The downloaded file may have an unusual name (e.g., "Client Secret JSON from Google Cloud.json"). Find it and move it into place:
 
 ```bash
 mkdir -p ~/.config/gws
 ```
 
-Then ask the user where they downloaded the file. Common locations:
+Search for the downloaded file:
 
 ```bash
-# Check Downloads folder for the file
 ls -t ~/Downloads/*.json | head -5
 ```
 
-Copy it to the right place:
+Copy it (use the actual filename found above):
 
 ```bash
 cp "PATH_TO_DOWNLOADED_FILE" ~/.config/gws/client_secret.json
 ```
 
-Verify:
+Verify it's in place:
 
 ```bash
 ls ~/.config/gws/client_secret.json
 ```
 
-## Step 3: Authenticate (per account)
+## Step 4: Authenticate (per account)
 
 This step must be run interactively — it opens a browser. Instruct the user to run:
 
@@ -129,13 +137,15 @@ gws gmail users getProfile --params '{"userId":"me"}'
 
 Should return the email address and message counts.
 
-## Adding More Accounts
+### Multiple accounts
 
-The gws CLI stores one set of credentials at a time. To add/switch accounts:
+The gws CLI stores one active account at a time. After authenticating the first account, let the user know:
 
-1. **Add the email as a test user** in Google Cloud Console (https://console.cloud.google.com/auth/audience) — under "Test users", click "Add users"
-2. **Re-authenticate**: `! gws auth login -s gmail` — pick the new account in the browser
-3. This overwrites the previous credentials. Only one account is active at a time.
+"You're connected as alice@acme.com. To switch to another account later, just run `! gws auth login -s gmail` again and pick a different one. All your accounts are already approved as test users, so switching is instant."
+
+There is no need to authenticate every account right now — they can switch whenever they want. But if the user wants to verify a specific account works, repeat the login step for each one.
+
+## Switching Accounts (Post-Setup)
 
 To check which account is currently active:
 
@@ -143,11 +153,19 @@ To check which account is currently active:
 gws auth status 2>&1 | grep '"user"'
 ```
 
+To switch:
+
+```
+! gws auth login -s gmail
+```
+
+Pick the desired account in the browser. The new credentials replace the old ones. All accounts added as test users during setup will work without any additional configuration.
+
 ## Troubleshooting
 
 ### "gcloud CLI not found" on `gws auth setup`
 
-The `gws auth setup` shortcut requires gcloud. Skip it entirely — the manual OAuth route (Step 2) works without gcloud.
+The `gws auth setup` shortcut requires gcloud. Skip it entirely — the manual OAuth route (Step 3) works without gcloud.
 
 ### "Access blocked: has not completed the Google verification process"
 
@@ -167,4 +185,4 @@ The auth scopes may not include Gmail. Re-login with Gmail scope:
 
 ### Python errors when installing gcloud via brew
 
-Skip gcloud entirely. The manual OAuth setup (Step 2) doesn't need it.
+Skip gcloud entirely. The manual OAuth setup (Step 3) doesn't need it.

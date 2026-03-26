@@ -27,7 +27,7 @@ which gws 2>/dev/null && gws auth status 2>&1
 Based on the result, take the appropriate path:
 
 - **gws not found** → Tell the user: "The gws CLI isn't installed yet. Let me walk you through the setup." Then follow `references/setup-guide.md` starting from Step 1.
-- **`auth_method: none`** or **`client_config_exists: false`** → The CLI is installed but no Google Cloud project is configured. Tell the user: "gws is installed but needs a Google Cloud project for OAuth. This takes about 2 minutes — I'll walk you through it." Then follow `references/setup-guide.md` starting from Step 2.
+- **`auth_method: none`** or **`client_config_exists: false`** → The CLI is installed but no Google Cloud project is configured. First, ask which Gmail accounts they want to manage (Step 2 in the setup guide). Then walk through the Google Cloud setup. Follow `references/setup-guide.md` starting from Step 2.
 - **`has_refresh_token: false`** or **`token_valid: false`** → Project is configured but not logged in. Tell the user: "gws is set up but needs you to log in." Then instruct: `! gws auth login -s gmail`
 - **`token_valid: true`** → Fully ready. Proceed to profile fetch.
 
