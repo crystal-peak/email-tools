@@ -54,11 +54,14 @@ if echo "$COMMAND" | grep -qE 'gws gmail users' 2>/dev/null && echo "$COMMAND" |
 fi
 
 if [[ -n "$ERRORS" ]]; then
-  REASON="BLOCKED: gws command syntax error(s):\n${ERRORS}Refer to the email-tools skill for correct command syntax. Copy commands exactly as shown."
-  # Escape for JSON
-  REASON_ESCAPED=$(echo -e "$REASON" | python3 -c 'import sys,json; print(json.dumps(sys.stdin.read()))')
-  echo "{\"hookSpecificOutput\":{\"permissionDecision\":\"deny\"},\"systemMessage\":${REASON_ESCAPED}}"
-  exit 0
+  echo "BLOCKED by gws-command-guard: gws command syntax error(s):" >&2
+  echo -e "$ERRORS" >&2
+  echo "Refer to the email-tools skill for correct command syntax. Copy commands exactly as shown." >&2
+  echo "Quick reference:" >&2
+  echo "  Helper commands: gws gmail +triage, gws gmail +send, gws gmail +read" >&2
+  echo "  API methods:     gws gmail users messages list --params '{\"userId\":\"me\"}'" >&2
+  echo "  Bulk ops:        gws gmail users messages batchModify --params '{...}'" >&2
+  exit 2
 fi
 
 # Command looks valid
