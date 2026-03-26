@@ -12,6 +12,36 @@ description: >-
 
 Manage Gmail entirely from the command line using the `gws` CLI. This skill covers inbox triage, composing and sending messages, replying, forwarding, searching, reading, labeling, archiving, and deleting email.
 
+## CRITICAL: gws Command Syntax
+
+**DO NOT improvise gws commands. Copy them exactly from this skill or the references.**
+
+gws uses two command styles:
+
+1. **Helper commands** (simple shortcuts): `gws gmail +triage`, `gws gmail +send`, `gws gmail +reply`, `gws gmail +forward`, `gws gmail +read`
+2. **API methods** (full control): `gws gmail users messages list`, `gws gmail users messages trash`, etc.
+
+**Rules for API methods:**
+- Subcommands are SPACE-separated: `gws gmail users messages list` (NOT `gws gmail list`, NOT `gws gmail.users.messages.list`)
+- Parameters go in `--params` as JSON: `--params '{"userId":"me","id":"MSG_ID"}'`
+- There are NO `--user-id`, `--message-id`, or similar flags on API methods — everything goes through `--params`
+- For bulk operations use `batchModify`, not individual calls per message
+
+**Quick reference for common operations:**
+```bash
+# List messages
+gws gmail users messages list --params '{"q":"QUERY","userId":"me"}'
+
+# Trash messages (single)
+gws gmail users messages trash --params '{"userId":"me","id":"MSG_ID"}'
+
+# Archive messages (bulk — up to 1000 at once)
+gws gmail users messages batchModify --params '{"ids":["ID1","ID2",...],"userId":"me","removeLabelIds":["INBOX"]}'
+
+# Trash messages (bulk — use batchModify + TRASH label)
+gws gmail users messages batchModify --params '{"ids":["ID1","ID2",...],"userId":"me","addLabelIds":["TRASH"]}'
+```
+
 ---
 
 ## 1. Prerequisites
@@ -75,8 +105,6 @@ This skill enables the following operations:
 ## 3. Triage/Cleanup Flow
 
 Triage operates as a three-phase pipeline. Do not skip phases or combine them.
-
-**IMPORTANT**: All gws Gmail commands use space-separated subcommands. The pattern is always `gws gmail <resource> <method>`. For example: `gws gmail users messages list`, NOT `gws gmail list` or `gws gmail messages.list`. Copy commands exactly as shown below.
 
 ### Phase 1 — Scan
 
@@ -315,7 +343,8 @@ Maintain a mapping of display number → message ID for the current list. When t
 Follow these rules without exception. They override any user shortcut requests.
 
 - **NEVER send email without showing the user a preview first.** Always display the full draft (recipients, subject, body) and wait for explicit confirmation.
-- **NEVER delete messages without explicit confirmation.** Prefer archiving over deleting. If the user asks to delete, show the count and a sample of messages that will be affected, then wait for a clear "yes" or equivalent.
+- **NEVER delete/trash messages without a confirmation step.** When the user says "delete" or "trash", first show exactly what will be affected: "This will move 13 messages to trash: [list senders/subjects]. Confirm? (yes/no)". Only proceed after an explicit "yes". Prefer archiving over deleting — suggest it as an alternative.
+- **Use batchModify for bulk operations.** Never loop through messages one at a time. Use a single `batchModify` call with all message IDs (up to 1000 per call). For trash: `addLabelIds: ["TRASH"]`. For archive: `removeLabelIds: ["INBOX"]`.
 - **NEVER read email body content unless the user specifically asks to read a message.** During triage and search, use only metadata (sender, subject, date, labels). Do not fetch or display message bodies without an explicit request.
 - **Always show what will happen before doing it.** State the count of messages, the action to be taken, and which labels will be added or removed.
 - **Abort immediately if the user says "stop" or "cancel."** Halt the current operation, report what was completed and what was not, and await further instructions.
