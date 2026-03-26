@@ -16,54 +16,43 @@ Manage Gmail entirely from the command line using the `gws` CLI. This skill cove
 
 ## 1. Prerequisites
 
-Before executing any Gmail operation, verify the toolchain is available and authenticated.
+Before executing any Gmail operation, verify the toolchain is ready. Run these checks silently and act on the first failure found — do not dump all checks on the user at once.
 
-### Check installation
-
-Run `which gws` to confirm the CLI is on the PATH. If it is not installed, instruct the user to install it:
+### Quick diagnosis
 
 ```bash
-npm install -g @googleworkspace/cli
+which gws 2>/dev/null && gws auth status 2>&1
 ```
 
-The upstream repository is https://github.com/googleworkspace/cli — check there if the package name has changed.
+Based on the result, take the appropriate path:
 
-### Check authentication
+- **gws not found** → Tell the user: "The gws CLI isn't installed yet. Let me walk you through the setup." Then follow `references/setup-guide.md` starting from Step 1.
+- **`auth_method: none`** or **`client_config_exists: false`** → The CLI is installed but no Google Cloud project is configured. Tell the user: "gws is installed but needs a Google Cloud project for OAuth. This takes about 2 minutes — I'll walk you through it." Then follow `references/setup-guide.md` starting from Step 2.
+- **`has_refresh_token: false`** or **`token_valid: false`** → Project is configured but not logged in. Tell the user: "gws is set up but needs you to log in." Then instruct: `! gws auth login -s gmail`
+- **`token_valid: true`** → Fully ready. Proceed to profile fetch.
 
-Attempt a profile fetch to verify credentials:
+### Verify and capture user email
 
 ```bash
 gws gmail users getProfile --params '{"userId":"me"}'
 ```
 
-If this returns an authentication error, guide the user through login:
+If this succeeds, extract and store the `emailAddress` for use in triage heuristics (detecting automated notifications, identifying same-org senders, etc.). Show the user: "Connected as alice@example.com. What would you like to do?"
 
-```bash
-gws auth login -s gmail
-```
+If this fails with an auth error despite `token_valid: true`, the token may have expired or scopes may be insufficient. Instruct: `! gws auth login -s gmail`
 
-Then retry the profile fetch.
+### Switching accounts
 
-### Capture user email address
+The gws CLI supports one active account at a time. When the user asks to "switch account", "use my other email", or "check my work email":
 
-Extract the `emailAddress` field from the profile response and store it. This value is needed later for triage heuristics (identifying messages sent by the user, detecting automated notifications addressed to the user, etc.).
+1. Show the currently active account: `gws auth status 2>&1 | grep '"user"'`
+2. Tell the user to re-authenticate: "To switch accounts, run this in your terminal:" → `! gws auth login -s gmail`
+3. Remind them: the new account must be added as a test user in their Google Cloud Console first (https://console.cloud.google.com/auth/audience → Test users). If they get "Access blocked", this is why.
+4. After re-auth, verify with the profile fetch above.
 
-### Multi-account support
+### First-time setup reference
 
-The `gws` CLI stores one set of credentials at a time. Check the active account with `gws auth status` (look at the `user` field).
-
-To switch accounts, the user must re-authenticate:
-
-```bash
-gws auth login -s gmail
-```
-
-This opens the browser where a different Google account can be selected. The new credentials overwrite the previous ones.
-
-When the user asks to "switch account" or "use my other email":
-1. Show the currently active account from `gws auth status`
-2. Offer to re-authenticate: "To switch, run `gws auth login -s gmail` in your terminal and pick the other account."
-3. After re-auth, verify by running `gws gmail users getProfile --params '{"userId":"me"}'`
+For the complete setup walkthrough (Google Cloud project creation, OAuth consent screen, client secret download, troubleshooting), consult `references/setup-guide.md`. Guide the user through it one step at a time — do not dump all steps at once.
 
 ---
 
@@ -306,6 +295,7 @@ Follow these rules without exception. They override any user shortcut requests.
 
 Two reference documents provide detailed specifications that supplement this skill file:
 
+- **`references/setup-guide.md`** — Complete first-time setup walkthrough: gws installation, Google Cloud project creation, OAuth consent screen, client secret download, per-account login, adding test users, troubleshooting common errors.
 - **`references/gws-gmail-commands.md`** — Full gws Gmail command reference including syntax for every supported operation, parameter schemas, pagination options, error handling patterns, and worked examples for common workflows.
 - **`references/triage-heuristics.md`** — Categorization decision table with header-matching rules, sender pattern heuristics, batch processing strategy, output format specification, and edge case handling (e.g., mailing lists the user participates in, transactional emails that might be important, calendar notifications).
 
