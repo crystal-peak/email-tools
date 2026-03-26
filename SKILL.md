@@ -76,11 +76,19 @@ This skill enables the following operations:
 
 Triage operates as a three-phase pipeline. Do not skip phases or combine them.
 
+**IMPORTANT**: All gws Gmail commands use space-separated subcommands. The pattern is always `gws gmail <resource> <method>`. For example: `gws gmail users messages list`, NOT `gws gmail list` or `gws gmail messages.list`. Copy commands exactly as shown below.
+
 ### Phase 1 — Scan
 
-Retrieve the user profile to obtain the email address (if not already captured during prerequisite checks).
+Start with the `+triage` helper for a quick overview:
 
-List all unread inbox messages:
+```bash
+gws gmail +triage --max 50 --format json
+```
+
+This returns a summary of unread messages (sender, subject, date). Use this to get an initial picture and count.
+
+For a full list of all unread inbox message IDs (needed for batch operations), use:
 
 ```bash
 gws gmail users messages list --params '{"q":"is:unread in:inbox","maxResults":500,"userId":"me"}' --page-all
