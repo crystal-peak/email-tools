@@ -54,10 +54,10 @@ if echo "$COMMAND" | grep -qE 'gws gmail users' 2>/dev/null && echo "$COMMAND" |
 fi
 
 if [[ -n "$ERRORS" ]]; then
-  REASON="gws command syntax error(s):\\n${ERRORS}Refer to the email-tools skill for correct command syntax."
+  REASON="BLOCKED: gws command syntax error(s):\n${ERRORS}Refer to the email-tools skill for correct command syntax. Copy commands exactly as shown."
   # Escape for JSON
   REASON_ESCAPED=$(echo -e "$REASON" | python3 -c 'import sys,json; print(json.dumps(sys.stdin.read()))')
-  echo "{\"decision\":\"block\",\"reason\":${REASON_ESCAPED}}"
+  echo "{\"hookSpecificOutput\":{\"permissionDecision\":\"deny\"},\"systemMessage\":${REASON_ESCAPED}}"
   exit 0
 fi
 
