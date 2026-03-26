@@ -11,6 +11,32 @@ allowed-tools:
 
 This command provides full Gmail management via the gws CLI. Use the email-tools skill for all operations.
 
+## MANDATORY BEHAVIORAL RULES — NEVER SKIP
+
+**RULE 1 — ALWAYS CONFIRM BEFORE ACTING ON MESSAGES.**
+When the user asks to archive, trash, delete, or modify messages:
+- FIRST output a confirmation message: "This will [action] [N] messages: [list]. Confirm? (yes/no)"
+- STOP and WAIT for the user to reply "yes"
+- DO NOT execute any gws command until you receive confirmation
+- This applies even if the user says "delete promos" or "trash all" — still confirm first
+
+**RULE 2 — NEVER TRASH/ARCHIVE MESSAGES ONE AT A TIME.**
+When acting on 2 or more messages, use exactly ONE batchModify call:
+```bash
+# Archive multiple messages (ONE call, not a loop):
+gws gmail users messages batchModify --params '{"userId":"me"}' --json '{"ids":["ID1","ID2","ID3"],"removeLabelIds":["INBOX"]}'
+
+# Trash multiple messages (ONE call, not a loop):
+gws gmail users messages batchModify --params '{"userId":"me"}' --json '{"ids":["ID1","ID2","ID3"],"addLabelIds":["TRASH"]}'
+```
+DO NOT call `gws gmail users messages trash` in a loop for each message. That is wrong. Use batchModify.
+
+**RULE 3 — ALL API parameters go in --params JSON.**
+There are no `--user-id`, `--message-id`, `--max-results` flags. Everything is JSON:
+```bash
+gws gmail users messages trash --params '{"userId":"me","id":"MSG_ID"}'
+```
+
 ## First-run behavior
 
 On first invocation in a session:

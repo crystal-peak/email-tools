@@ -12,27 +12,40 @@ description: >-
 
 Manage Gmail entirely from the command line using the `gws` CLI.
 
-## CRITICAL RULES — Read before every action
+## MANDATORY RULES — NEVER SKIP
 
-1. **CONFIRM before destructive actions.** Before archiving, trashing, or deleting ANY messages, FIRST show the user what will happen ("This will trash 12 messages: [list]") and ask "Confirm? (yes/no)". NEVER execute without a "yes".
+### RULE 1: ALWAYS CONFIRM BEFORE ACTING
+Before archiving, trashing, or deleting ANY messages:
+1. Output: "This will [action] [N] messages: [list senders/subjects]"
+2. Ask: "Confirm? (yes/no)"
+3. STOP. Do NOT call any gws command. Wait for the user to say "yes".
+4. Only after receiving "yes", proceed to execute.
 
-2. **ALWAYS use batchModify for 2+ messages.** NEVER loop through messages one at a time. One API call handles up to 1000 messages:
-   ```bash
-   # Archive bulk
-   gws gmail users messages batchModify --params '{"ids":["ID1","ID2","ID3"],"userId":"me","removeLabelIds":["INBOX"]}'
-   # Trash bulk
-   gws gmail users messages batchModify --params '{"ids":["ID1","ID2","ID3"],"userId":"me","addLabelIds":["TRASH"]}'
-   ```
+This applies EVERY time, even if the user says "delete them", "trash all", "archive promos". Always confirm first.
 
-3. **API methods use `--params` for ALL parameters.** There are NO `--user-id`, `--message-id`, `--max-results`, or `--label-ids` flags. Everything goes in the JSON:
-   ```bash
-   gws gmail users messages list --params '{"q":"is:unread","userId":"me","maxResults":50}'
-   gws gmail users messages trash --params '{"userId":"me","id":"MSG_ID"}'
-   ```
+### RULE 2: USE batchModify FOR BULK — NEVER LOOP
+When acting on 2+ messages, make exactly ONE batchModify call with all IDs in an array. Do NOT call trash/modify in a loop for each message ID.
 
-4. **Subcommands are SPACE-separated.** `gws gmail users messages list` — NOT `gws gmail list`, NOT `gws gmail.users.messages.list`.
+**CORRECT (one call for all messages):**
+```bash
+gws gmail users messages batchModify --params '{"userId":"me"}' --json '{"ids":["ID1","ID2","ID3","ID4","ID5"],"addLabelIds":["TRASH"]}'
+```
 
-5. **Prefer archive over delete.** When the user says "delete", suggest archiving instead. Only trash if they specifically insist on delete/trash.
+**WRONG (calling trash individually for each — NEVER DO THIS):**
+```bash
+gws gmail users messages trash --params '{"userId":"me","id":"ID1"}'
+gws gmail users messages trash --params '{"userId":"me","id":"ID2"}'
+gws gmail users messages trash --params '{"userId":"me","id":"ID3"}'
+```
+
+### RULE 3: ALL API parameters go in --params JSON
+There are NO `--user-id`, `--message-id`, `--max-results`, or `--label-ids` flags on API methods. Everything goes inside `--params` as JSON.
+
+### RULE 4: Space-separated subcommands
+`gws gmail users messages list` — NOT `gws gmail list`
+
+### RULE 5: Prefer archive over delete
+When the user says "delete", suggest archiving instead. Only trash if they insist.
 
 ## Helper Commands (shortcuts — use these when possible)
 
@@ -59,7 +72,7 @@ gws gmail users messages get --params '{"id":"MSG_ID","userId":"me","format":"me
 gws gmail users messages modify --params '{"id":"MSG_ID","userId":"me","removeLabelIds":["INBOX"]}'
 
 # Modify labels (BULK — always use this for 2+ messages)
-gws gmail users messages batchModify --params '{"ids":["ID1","ID2",...],"userId":"me","removeLabelIds":["INBOX"]}'
+gws gmail users messages batchModify --params '{"userId":"me"}' --json '{"ids":["ID1","ID2",...],"removeLabelIds":["INBOX"]}'
 
 # Trash single message
 gws gmail users messages trash --params '{"userId":"me","id":"MSG_ID"}'
@@ -139,7 +152,7 @@ Show grouped summary with numbered lists. Wait for user to tell you what to do.
 2. Wait for explicit "yes"
 3. Execute with ONE `batchModify` call:
    ```bash
-   gws gmail users messages batchModify --params '{"ids":["id1","id2","id3",...],"userId":"me","removeLabelIds":["INBOX"]}'
+   gws gmail users messages batchModify --params '{"userId":"me"}' --json '{"ids":["id1","id2","id3",...],"removeLabelIds":["INBOX"]}'
    ```
 4. For trash: use `"addLabelIds":["TRASH"]` instead
 5. Report result: "Archived 15 messages."
@@ -181,7 +194,7 @@ See `references/gws-gmail-commands.md` for the full Gmail query syntax cheat she
 ```bash
 gws gmail users labels list --params '{"userId":"me"}'                                                    # List labels
 gws gmail users messages modify --params '{"id":"MSG_ID","userId":"me","removeLabelIds":["INBOX"]}'       # Archive one
-gws gmail users messages batchModify --params '{"ids":[...],"userId":"me","removeLabelIds":["INBOX"]}'    # Archive bulk
+gws gmail users messages batchModify --params '{"userId":"me"}' --json '{"ids":[...],"removeLabelIds":["INBOX"]}'    # Archive bulk
 gws gmail users messages modify --params '{"id":"MSG_ID","userId":"me","addLabelIds":["LABEL_ID"]}'       # Add label
 ```
 
