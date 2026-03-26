@@ -80,21 +80,47 @@ Triage operates as a three-phase pipeline. Do not skip phases or combine them.
 
 ### Phase 1 — Scan
 
-Start with the `+triage` helper for a quick overview:
+First, get a count of unread inbox messages:
 
 ```bash
-gws gmail +triage --max 50 --format json
+gws gmail users messages list --params '{"q":"is:unread in:inbox","maxResults":1,"userId":"me"}'
 ```
 
-This returns a summary of unread messages (sender, subject, date). Use this to get an initial picture and count.
+The response includes `resultSizeEstimate` which gives the approximate total count. Report this to the user.
 
-For a full list of all unread inbox message IDs (needed for batch operations), use:
+Then adapt the strategy based on inbox size:
 
-```bash
-gws gmail users messages list --params '{"q":"is:unread in:inbox","maxResults":500,"userId":"me"}' --page-all
-```
+**Small inbox (under 100 unread):**
+- Fetch all message IDs and categorize individually
+- Use `+triage --max 100 --format json` for the overview
+- Fetch metadata for each message for precise categorization
 
-Report the total count to the user before proceeding. If the count is zero, inform the user their inbox is clean and stop.
+**Medium inbox (100–500 unread):**
+- Fetch all message IDs with `--page-all`
+- Categorize in batches of 50
+- Show grouped summary
+
+**Large inbox (500+ unread):**
+- Don't try to categorize every message individually — too slow
+- Instead, use targeted queries to identify and batch-archive the biggest noise categories first:
+  ```bash
+  gws gmail users messages list --params '{"q":"is:unread in:inbox from:notifications@github.com","userId":"me"}' --page-all
+  gws gmail users messages list --params '{"q":"is:unread in:inbox list:unsubscribe","userId":"me"}' --page-all
+  gws gmail users messages list --params '{"q":"is:unread in:inbox from:noreply","userId":"me"}' --page-all
+  ```
+- Show the user a breakdown by category with counts: "You have ~4,000 unread. Here's where the volume is coming from:"
+  - GitHub notifications: 800
+  - Newsletters/mailing lists: 600
+  - Marketing (noreply): 400
+  - Slack digests: 200
+  - etc.
+- Let the user pick which categories to archive in bulk
+- After clearing the noise, the remaining messages (likely a few hundred) can be triaged individually
+
+**Empty inbox (0 unread):**
+- "Your inbox is clean! Nothing to triage."
+
+For all sizes, use `--page-all` with `--page-limit` to control pagination depth. Each page returns up to 500 IDs.
 
 ### Phase 2 — Categorize
 
