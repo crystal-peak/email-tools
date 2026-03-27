@@ -6,6 +6,7 @@ tools:
   - Write
 allowed-tools:
   - Bash(gws:*)
+  - Bash(GOOGLE_WORKSPACE_CLI_CONFIG_DIR:*)
   - Bash(cat:*)
   - Bash(mkdir:*)
   - Bash(cp:*)
