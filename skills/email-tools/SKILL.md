@@ -47,7 +47,27 @@ There are NO `--user-id`, `--message-id`, `--max-results`, or `--label-ids` flag
 ### RULE 5: Prefer archive over delete
 When the user says "delete", suggest archiving instead. Only trash if they insist.
 
+## Multi-Account Support
+
+All gws commands MUST be prefixed with the active account's config directory. Before running any gws command, read the state file:
+
+```bash
+cat ~/.config/email-tools/accounts.json 2>/dev/null
+```
+
+Then prefix every gws command with the active account's `config_dir`:
+
+```bash
+GOOGLE_WORKSPACE_CLI_CONFIG_DIR=CONFIG_DIR gws gmail +triage --format json
+```
+
+If no state file exists, follow `references/multi-account.md` to set up accounts. If a default `~/.config/gws` auth exists, migrate it first.
+
+When the user says "switch account", "add account", "remove account", "use my work email", etc., follow `references/multi-account.md`.
+
 ## Helper Commands (shortcuts — use these when possible)
+
+All commands below assume the `GOOGLE_WORKSPACE_CLI_CONFIG_DIR=CONFIG_DIR` prefix is added.
 
 ```bash
 gws gmail +triage [--max N] [--format json] [--query 'QUERY']  # Read-only inbox summary
@@ -88,26 +108,28 @@ gws gmail users labels list --params '{"userId":"me"}'
 
 ## 1. Prerequisites
 
-Run these checks silently and act on the first failure — do not dump all checks on the user at once.
+Run these checks silently and act on the first failure.
 
+**Step 1 — Check gws installed:**
 ```bash
-which gws 2>/dev/null && gws auth status 2>&1
+which gws 2>/dev/null
 ```
+If not found → follow `references/setup-guide.md` from Step 1.
 
-- **gws not found** → "The gws CLI isn't installed yet. Let me walk you through the setup." Follow `references/setup-guide.md` from Step 1.
-- **`auth_method: none`** or **`client_config_exists: false`** → First ask which Gmail accounts they want to manage, then walk through Google Cloud setup. Follow `references/setup-guide.md` from Step 2.
-- **`has_refresh_token: false`** or **`token_valid: false`** → "gws is set up but needs you to log in." Instruct: `! gws auth login -s gmail`
-- **`token_valid: true`** → Ready. Fetch profile:
-
+**Step 2 — Check accounts state:**
 ```bash
-gws gmail users getProfile --params '{"userId":"me"}'
+cat ~/.config/email-tools/accounts.json 2>/dev/null
 ```
+- **State file exists** → Read the active account, set `CONFIG_DIR` from it, proceed to Step 3.
+- **No state file** → Check if default gws auth exists (`gws auth status`). If yes, migrate it to multi-account setup per `references/multi-account.md`. If no auth at all, follow `references/setup-guide.md` then `references/multi-account.md`.
 
-Store the `emailAddress` for triage heuristics. Show: "Connected as alice@example.com."
+**Step 3 — Verify active account:**
+```bash
+GOOGLE_WORKSPACE_CLI_CONFIG_DIR=CONFIG_DIR gws gmail users getProfile --params '{"userId":"me"}'
+```
+If this fails, the token may be expired. Instruct: `! GOOGLE_WORKSPACE_CLI_CONFIG_DIR=CONFIG_DIR gws auth login -s gmail`
 
-### Switching accounts
-
-One active account at a time. To switch: `! gws auth login -s gmail` (picks new account in browser). The new account must be a test user in Google Cloud Console first. See `references/setup-guide.md`.
+Show: "Connected as alice@example.com (personal). You have N accounts configured."
 
 ---
 
@@ -217,5 +239,6 @@ Maintain an internal mapping of display number → message ID. Resolve to actual
 ## 7. Reference Files
 
 - **`references/setup-guide.md`** — First-time setup walkthrough, OAuth, troubleshooting
+- **`references/multi-account.md`** — Multi-account management, adding/switching/removing accounts, state file format
 - **`references/gws-gmail-commands.md`** — Full command reference, query syntax, all parameters
 - **`references/triage-heuristics.md`** — Categorization rules, batch processing, output format

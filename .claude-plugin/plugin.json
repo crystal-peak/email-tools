@@ -1,6 +1,6 @@
 {
   "name": "email-tools",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Gmail assistant via gws CLI — triage, send, reply, forward, search, label, and cleanup",
   "author": {
     "name": "crystal-peak",

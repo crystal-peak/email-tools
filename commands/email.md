@@ -40,9 +40,10 @@ gws gmail users messages trash --params '{"userId":"me","id":"MSG_ID"}'
 ## First-run behavior
 
 On first invocation in a session:
-1. Check gws is installed and authenticated (see email-tools skill prerequisites)
-2. Run `gws auth status` to confirm the active account
-3. Show the active account to the user before proceeding
+1. Check gws is installed (see email-tools skill prerequisites)
+2. Read `~/.config/email-tools/accounts.json` to get configured accounts
+3. If no accounts configured, walk user through setup per `references/multi-account.md`
+4. Show the active account before proceeding: "Connected as alice@example.com (personal)"
 
 ## Routing
 
@@ -50,7 +51,7 @@ If an argument was provided (e.g., `/email triage`, `/email send Bob the report`
 
 If no argument was provided, show this menu:
 
-**Gmail Assistant** — What would you like to do?
+**Gmail Assistant** (active: alice@example.com) — What would you like to do?
 
  1. **triage** — Scan and clean up your inbox
  2. **send** — Compose and send an email
@@ -59,6 +60,8 @@ If no argument was provided, show this menu:
  5. **search** — Search your email
  6. **read** — Read a specific message
  7. **labels** — Manage your labels
+ 8. **switch account** — Change active Gmail account
+ 9. **add account** — Add another Gmail account
 
 Pick a number or describe what you need.
 
